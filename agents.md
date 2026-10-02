@@ -12,6 +12,28 @@
 - Files: `index.html`, `styles.css`, `app.js`
 - Persistence: Browser `localStorage`, key `tasks`, JSON array of tasks.
 - Storage helpers: `getTasks()`, `saveTasks(tasks)`.
+- E2E tests: Playwright (`@playwright/test`) in `tests/`, driving the system Chromium.
+
+## Testing
+
+- `npm test` runs the e2e suite; `npm test:headed` for a visible browser; `npm test:report` opens the last HTML report; `npm run serve` starts the static server alone.
+- The app must be served over HTTP (never `file://`), otherwise `localStorage` is unavailable and the app renders empty.
+- The suite uses the Alpine-provided Chromium at `/usr/bin/chromium` through `launchOptions.executablePath`. Install it with `apk add chromium`, or point `CHROMIUM_PATH` at another binary.
+- Do not run `npx playwright install`: the browser download is unnecessary. If `npm install` triggers one anyway, use `npm install -D @playwright/test --ignore-scripts`.
+- Test files:
+  - `playwright.config.js`: base URL `http://127.0.0.1:4173`, Chromium launched with `--no-sandbox --disable-dev-shm-usage` (required to run as root in a container), traces and screenshots retained on failure.
+  - `tests/server.js`: zero-dependency `node:http` static server for the repository root.
+  - `tests/fixtures.js`: `tasks` fixture exposing `seedTasks(tasks)` (writes `localStorage` before app code runs) and `readTasks(page)` (reads it back for persistence assertions).
+  - `tests/crud.spec.js`: one test per scenario in `specs/start/taskadmin.feature`.
+- Video recording is intentionally off; it requires Playwright's ffmpeg binary, which is not installed.
+- `package-lock.json` is git-ignored, so installs may resolve a newer minor of `@playwright/test` than the one that was last verified.
+- `test-results/`, `playwright-report/`, and `playwright/.cache/` are generated and git-ignored; delete them freely.
+
+### Selector conventions in tests
+
+- Views are toggled with a `.hidden` class (`display: none !important`), so `toBeVisible()` reflects view state exactly.
+- The toast self-hides after 3 seconds; assert it immediately after the triggering click and use short timeouts for negative assertions.
+- Two buttons are labelled "Delete" (the details view and the confirmation modal), so scope those clicks: `#details-view` for the first, `#confirm-modal` for the confirmation.
 
 ## Data Model
 

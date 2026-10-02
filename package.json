@@ -1,0 +1,16 @@
+{
+  "name": "taskadmin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Task Management CRUD application",
+  "type": "module",
+  "scripts": {
+    "serve": "node tests/server.js",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
