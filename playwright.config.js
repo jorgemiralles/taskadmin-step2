@@ -1,8 +1,25 @@
+import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
 
-const CHROMIUM_PATH = process.env.CHROMIUM_PATH || '/usr/bin/chromium';
+const SYSTEM_CHROMIUM = '/usr/bin/chromium';
+
+// Prefer an explicit CHROMIUM_PATH (Alpine's apk build), then a system install,
+// then fall back to Playwright's managed browser on GitHub Actions.
+function resolveChromiumPath() {
+  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+  if (existsSync(SYSTEM_CHROMIUM)) return SYSTEM_CHROMIUM;
+  return undefined;
+}
+
 const PORT = Number(process.env.PORT || 4173);
 const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`;
+
+const launchOptions = {
+  args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+};
+
+const CHROMIUM_PATH = resolveChromiumPath();
+if (CHROMIUM_PATH) launchOptions.executablePath = CHROMIUM_PATH;
 
 export default defineConfig({
   testDir: 'tests',
@@ -28,10 +45,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        launchOptions: {
-          executablePath: CHROMIUM_PATH,
-          args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
-        }
+        launchOptions
       }
     }
   ],
